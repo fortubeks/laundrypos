@@ -8,9 +8,9 @@
                 <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
                     <div class="bg-gradient-dark shadow-dark border-radius-lg pt-4 pb-3">
                         <h6 class="text-white text-capitalize ps-3">
-                            Service Items
+                            Customers
                             <p class="text-sm mb-0">
-                                View all the service items from here.
+                                View all the Customers from here.
                             </p>
                         </h6>
                     </div>
@@ -19,14 +19,14 @@
                             <div class="">
                                 <form id="userSearchForm" action="{{ route('orders.index') }}" method="GET">
                                     <div class="input-group input-group-outline">
-                                        <label id="query" class="form-label">Search items here...</label>
+                                        <label id="query" class="form-label">Search here...</label>
                                         <input name="query" type="text" class="form-control" onfocus="focused(this)" onfocusout="defocused(this)" id="userSearchInput">
                                     </div>
                                 </form>
                             </div>
                         </div>
                         <div class="ms-auto">
-                            <a href="{{route('service-items.create')}}" class="btn bg-gradient-dark btn-sm mb-0">+&nbsp; New Item</a>
+                            <a href="{{route('customers.create')}}" class="btn bg-gradient-dark btn-sm mb-0">+&nbsp; New customer</a>
                         </div>
                     </div>
                 </div>
@@ -34,25 +34,25 @@
                     <table class="table align-items-center mb-0">
                         <thead>
                             <tr>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Item</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Category</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Price</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Customer</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Phone</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Email</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Action</th>
                                 <!-- <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Last Login</th>
                                 <th class="text-secondary opacity-7"></th> -->
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($serviceItems as $item)
+                            @foreach($customers as $customer)
                             <tr>
                                 <td>
                                     <div class="d-flex">
                                         <img class="w-10 ms-3" src="https://raw.githubusercontent.com/creativetimofficial/public-assets/master/soft-ui-design-system/assets/img/ecommerce/adidas-hoodie.jpg" alt="hoodie">
-                                        <h6 class="ms-3 my-auto">{{$item->name}}</h6>
+                                        <h6 class="ms-3 my-auto">{{$customer->first_name}}</h6>
                                     </div>
                                 </td>
-                                <td class="text-sm">Shirt</td>
-                                <td class="text-sm">{{$item->price}}</td>
+                                <td class="text-sm"></td>
+                                <td class="text-sm"></td>
                                 <td class="text-sm">
                                     <a href="javascript:;" data-bs-toggle="tooltip" data-bs-original-title="Preview product">
                                         <i class="material-symbols-rounded text-secondary position-relative text-lg">visibility</i>
@@ -69,7 +69,7 @@
                         </tbody>
                     </table>
                     <div class="mt-4">
-                        {{ $serviceItems->links() }}
+                        {{ $customers->links() }}
                     </div>
                 </div>
             </div>

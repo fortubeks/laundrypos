@@ -115,13 +115,13 @@
                             <a class="btn bg-gradient-success w-100 mb-0 toast-btn" href="{{route('orders.create')}}">Create New Sale</a>
                         </div>
                         <div class="col-lg-3 col-sm-6 col-12 mt-sm-0 mt-2">
-                            <button class="btn bg-gradient-info w-100 mb-0 toast-btn" href="{{route('orders.index')}}">View Sales</button>
+                            <a class="btn bg-gradient-info w-100 mb-0 toast-btn" href="{{route('orders.index')}}">View Sales</a>
                         </div>
                         <div class="col-lg-3 col-sm-6 col-12 mt-lg-0 mt-2">
-                            <button class="btn bg-gradient-warning w-100 mb-0 toast-btn" href="{{route('customers.index')}}">View Customers</button>
+                            <a class="btn bg-gradient-warning w-100 mb-0 toast-btn" href="{{route('customers.index')}}">View Customers</a>
                         </div>
                         <div class="col-lg-3 col-sm-6 col-12 mt-lg-0 mt-2">
-                            <button class="btn bg-gradient-danger w-100 mb-0 toast-btn" href="{{route('service-items.index')}}">Service Items</button>
+                            <a class="btn bg-gradient-danger w-100 mb-0 toast-btn" href="{{route('service-items.index')}}">Service Items</a>
                         </div>
                     </div>
                 </div>

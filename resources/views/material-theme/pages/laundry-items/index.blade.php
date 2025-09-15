@@ -8,9 +8,9 @@
                 <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
                     <div class="bg-gradient-dark shadow-dark border-radius-lg pt-4 pb-3">
                         <h6 class="text-white text-capitalize ps-3">
-                            Service Items
+                            Laundry Items
                             <p class="text-sm mb-0">
-                                View all the service items from here.
+                                View all the Laundry items from here.
                             </p>
                         </h6>
                     </div>
@@ -26,7 +26,7 @@
                             </div>
                         </div>
                         <div class="ms-auto">
-                            <a href="{{route('service-items.create')}}" class="btn bg-gradient-dark btn-sm mb-0">+&nbsp; New Item</a>
+                            <a href="{{route('laundry-items.create')}}" class="btn bg-gradient-dark btn-sm mb-0">+&nbsp; New Item</a>
                         </div>
                     </div>
                 </div>
@@ -35,15 +35,13 @@
                         <thead>
                             <tr>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Item</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Category</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Price</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Action</th>
-                                <!-- <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Last Login</th>
-                                <th class="text-secondary opacity-7"></th> -->
+                                <!-- <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Last Login</th>-->
+                                <th class="text-secondary opacity-7"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($serviceItems as $item)
+                            @foreach($laundryItems as $item)
                             <tr>
                                 <td>
                                     <div class="d-flex">
@@ -51,8 +49,6 @@
                                         <h6 class="ms-3 my-auto">{{$item->name}}</h6>
                                     </div>
                                 </td>
-                                <td class="text-sm">Shirt</td>
-                                <td class="text-sm">{{$item->price}}</td>
                                 <td class="text-sm">
                                     <a href="javascript:;" data-bs-toggle="tooltip" data-bs-original-title="Preview product">
                                         <i class="material-symbols-rounded text-secondary position-relative text-lg">visibility</i>
@@ -69,7 +65,7 @@
                         </tbody>
                     </table>
                     <div class="mt-4">
-                        {{ $serviceItems->links() }}
+                        {{ $laundryItems->links() }}
                     </div>
                 </div>
             </div>

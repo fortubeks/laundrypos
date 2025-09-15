@@ -20,6 +20,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //Service items
     Route::resource('service-items', App\Http\Controllers\ServiceItemController::class);
 
+    //Laundry items
+    Route::resource('laundry-items', App\Http\Controllers\LaundryItemController::class);
+
     //Reports
     Route::get('/revenues', [App\Http\Controllers\DashboardController::class, 'index'])->name('reports.revenue');
 

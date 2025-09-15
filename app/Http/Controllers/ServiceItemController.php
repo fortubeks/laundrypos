@@ -9,13 +9,13 @@ class ServiceItemController extends Controller
 {
     public function index()
     {
-        $services = ServiceItem::where('laundry_id', laundryId())->paginate(15);
-        return theme_view('pages.service-items.index', compact('services'));
+        $serviceItems = ServiceItem::where('laundry_id', laundryId())->paginate(15);
+        return theme_view('pages.service-items.index', compact('serviceItems'));
     }
 
     public function create()
     {
-        return view('dashboard.laundry-services.create');
+        return theme_view('pages.service-items.form');
     }
 
     public function store(Request $request)
@@ -24,7 +24,7 @@ class ServiceItemController extends Controller
             'name' => 'required',
             'price' => 'required|numeric',
         ]);
-        $request->merge(['hotel_id' => hotelId()]);
+        $request->merge(['hotel_id' => laundryId()]);
 
         LaundryService::create($request->all());
 

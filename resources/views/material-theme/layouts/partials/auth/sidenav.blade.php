@@ -41,15 +41,21 @@
                 </div>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-dark" href="{{route('orders.index')}}">
+                <a class="nav-link text-dark" href="{{route('customers.index')}}">
                     <i class="material-symbols-rounded opacity-5">shopping_cart</i>
                     <span class="nav-link-text ms-1">Customers</span>
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link text-dark" href="{{route('laundry-items.index')}}">
+                    <i class="material-symbols-rounded opacity-5">shopping_cart</i>
+                    <span class="nav-link-text ms-1">Laundry Items</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link text-dark" href="{{route('service-items.index')}}">
                     <i class="material-symbols-rounded opacity-5">shopping_cart</i>
-                    <span class="nav-link-text ms-1">Serivice Items</span>
+                    <span class="nav-link-text ms-1">Service Items</span>
                 </a>
             </li>
             <li class="nav-item">

@@ -92,7 +92,7 @@
                             <a class="nav-link page-scroll" href="#contact">Contact</a>
                         </li>
                         <li>
-                            <a href="{{route('register')}}" class="btn btn-primary">Sign In</a>
+                            <a href="{{route('login')}}" class="btn btn-primary">Sign In</a>
                         </li>
                     </ul>
 
