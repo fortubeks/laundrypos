@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\User;
+use App\Models\Laundry;
 
 class UserObserver
 {
@@ -11,13 +12,12 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        if ($user->role === "Super Admin") {
-            //create a laundry for this user
-            $laundry = $user->laundry()->create([
+        if (empty($user->laundry_id)) {
+            $laundry = Laundry::create([
                 'name' => $user->name . "'s Laundry",
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
-            //update the user with the laundry id
+
             $user->laundry_id = $laundry->id;
             $user->save();
         }
