@@ -59,7 +59,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === 'Super Admin';
     }
 
-    public function landries()
+    public function laundries()
     {
         return $this->hasMany(Laundry::class);
     }
