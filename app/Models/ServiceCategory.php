@@ -5,7 +5,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class ServiceCategory extends Model
 {
-    // protected $fillable = ['laundry_id', 'name'];
     use \Illuminate\Database\Eloquent\Factories\HasFactory;
     protected $guarded = ['id'];
 

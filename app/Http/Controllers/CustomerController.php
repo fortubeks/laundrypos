@@ -12,12 +12,33 @@ class CustomerController extends Controller
 {
     public function get_customers(Request $request)
     {
-        $user      = $request->user();
-        $customers = Customer::where('laundry_id', $user->laundry_id)->orderBy('created_at', 'desc')->paginate(20);
+        $user = $request->user();
+
+        // Get query params with defaults
+        $perPage     = $request->input('per_page', 20);
+        $search      = $request->input('search', '');
+        $currentPage = $request->input('page', 1);
+
+        // Build query
+        $query = Customer::with(['country', 'state'])->where('laundry_id', $user->laundry_id)
+            ->orderBy('created_at', 'desc');
+
+        // Apply search if provided
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('other_names', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Paginate
+        $customers = $query->paginate($perPage, ['*'], 'page', $currentPage);
 
         return ApiHelper::validResponse('Customers retrieved successfully!', $customers);
     }
-
+    
     public function get_customer(Request $request, $id)
     {
         $user = $request->user();

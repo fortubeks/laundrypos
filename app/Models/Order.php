@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +10,7 @@ class Order extends Model
 
     public function customer()
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function laundry()
@@ -25,4 +24,9 @@ class Order extends Model
             ->withPivot(['quantity', 'price'])
             ->withTimestamps();
     }
+    public function items()
+    {
+        return $this->hasMany(OrderServiceItem::class, 'order_id');
+    }
+
 }

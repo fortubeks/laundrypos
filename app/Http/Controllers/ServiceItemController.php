@@ -11,11 +11,19 @@ class ServiceItemController extends Controller
 {
     public function get_service_items(Request $request)
     {
-        $user = $request->user();
+        $user    = $request->user();
+        $search  = $request->query('search');
+        $perPage = $request->query('per_page', 20);
 
-        $customers = ServiceItem::where('laundry_id', $user->laundry_id)->orderBy('created_at', 'desc')->paginate(20);
+        $query = ServiceItem::with(['category', 'laundry_item'])->where('laundry_id', $user->laundry_id);
 
-        return ApiHelper::validResponse('Service items retrieved successfully!', $customers);
+        if (! empty($search)) {
+            $query->where('name', 'LIKE', '%' . $search . '%');
+        }
+
+        $items = $query->orderBy('created_at', 'desc')->paginate($perPage);
+
+        return ApiHelper::validResponse('Service items retrieved successfully!', $items);
     }
 
     public function get_service_item(Request $request, $id)

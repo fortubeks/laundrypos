@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -7,14 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class ServiceItem extends Model
 {
-    // protected $fillable = [
-    //     'laundry_id',
-    //     'service_category_id',
-    //     'laundry_item_id', // nullable if per kg
-    //     'name',
-    //     'price',
-    //     'unit_type', // per_item | per_kg
-    // ];
     use HasFactory;
     protected $guarded = ['id'];
 
@@ -28,5 +19,15 @@ class ServiceItem extends Model
         return $this->belongsToMany(Order::class, 'order_service_item')
             ->withPivot(['quantity', 'price'])
             ->withTimestamps();
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(ServiceCategory::class, 'service_category_id');
+    }
+
+    public function laundry_item()
+    {
+        return $this->belongsTo(LaundryItem::class, 'laundry_item_id');
     }
 }

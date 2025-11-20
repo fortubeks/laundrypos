@@ -11,10 +11,20 @@ class LaundryItemController extends Controller
 {
     public function get_laundry_items(Request $request)
     {
-        $user      = $request->user();
-        $customers = LaundryItem::where('laundry_id', $user->laundry_id)->orderBy('created_at', 'desc')->paginate(20);
+        $user    = $request->user();
+        $search  = $request->query('search');
+        $perPage = $request->query('per_page', 20);
 
-        return ApiHelper::validResponse('Laundry items retrieved successfully!', $customers);
+        $query = LaundryItem::where('laundry_id', $user->laundry_id);
+
+        // Apply search only when provided
+        if (! empty($search)) {
+            $query->where('name', 'LIKE', '%' . $search . '%');
+        }
+
+        $items = $query->orderBy('created_at', 'desc')->paginate($perPage);
+
+        return ApiHelper::validResponse('Laundry items retrieved successfully!', $items);
     }
 
     public function get_laundry_item(Request $request, $id)
