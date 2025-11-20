@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class LaundryItem extends Model
 {
-    protected $fillable = ['laundry_id', 'name'];
+    use \Illuminate\Database\Eloquent\Factories\HasFactory;
+    // protected $fillable = ['laundry_id', 'name'];
+    protected $guarded = ['id'];
 
     public function laundry()
     {
