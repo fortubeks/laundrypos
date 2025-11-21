@@ -25,10 +25,10 @@ class OrderController extends Controller
 
         if (! empty($search)) {
             $query->where(function ($q) use ($search) {
-                $q->where('orders.name', 'like', "%{$search}%") // explicitly use table
-                    ->orWhereHas('customer', function ($q2) use ($search) {
-                        $q2->where('name', 'like', "%{$search}%");
-                    });
+                $q->whereHas('customer', function ($custQuery) use ($search) {
+                    $custQuery->where('first_name', 'like', '%' . $search . '%')
+                              ->orWhere('last_name', 'like', '%' . $search . '%');
+                });
             });
             Log::info('Search applied: ' . $search);
         }
@@ -53,7 +53,7 @@ class OrderController extends Controller
     public function create_order(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name'                    => 'required|string|max:255',
+            // 'name'                    => 'required|string|max:255',
             'customer_id'             => 'required|integer',
             'total_amount'            => 'required|numeric|min:0',
             'order_date'              => 'required|date',
@@ -82,7 +82,7 @@ class OrderController extends Controller
         try {
 
             $order = Order::create([
-                'name'         => $request->name,
+                'name'         => $request->customer_id . ' - ' . now()->timestamp,
                 'laundry_id'   => $user->laundry_id,
                 'customer_id'  => $request->customer_id,
                 'total_amount' => $request->total_amount,
@@ -93,7 +93,7 @@ class OrderController extends Controller
 
             foreach ($request->items as $item) {
                 OrderServiceItem::create([
-                    'name'            => $request->name . ' - Item ' . $item['service_item_id'],
+                    'name'            => $request->customer_id . ' - Item ' . $item['service_item_id'],
                     'laundry_id'      => $user->laundry_id,
                     'order_id'        => $order->id,
                     'service_item_id' => $item['service_item_id'],
@@ -121,7 +121,7 @@ class OrderController extends Controller
     public function update_order(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name'                    => 'required|string|max:255',
+            // 'name'                    => 'required|string|max:255',
             'customer_id'             => 'required|integer',
             'total_amount'            => 'required|numeric|min:0',
             'order_date'              => 'required|date',
@@ -153,7 +153,7 @@ class OrderController extends Controller
                 ->firstOrFail();
 
             $order->update([
-                'name'         => $request->name,
+                'name'         => $order->name,
                 'customer_id'  => $request->customer_id,
                 'total_amount' => $request->total_amount,
                 'order_date'   => $request->order_date,
@@ -166,7 +166,7 @@ class OrderController extends Controller
 
             foreach ($request->items as $item) {
                 OrderServiceItem::create([
-                    'name'            => $request->name . ' - Item ' . $item['service_item_id'],
+                    'name'            => $order->customer_id . ' - Item ' . $item['service_item_id'],
                     'laundry_id'      => $user->laundry_id,
                     'order_id'        => $order->id,
                     'service_item_id' => $item['service_item_id'],
