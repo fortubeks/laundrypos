@@ -1,56 +1,126 @@
 <?php
-
 namespace App\Http\Controllers;
 
+use App\Helpers\ApiHelper;
 use App\Models\ServiceItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ServiceItemController extends Controller
 {
-    public function index()
+    public function get_service_items(Request $request)
     {
-        $serviceItems = ServiceItem::where('laundry_id', laundryId())->paginate(15);
-        return theme_view('pages.service-items.index', compact('serviceItems'));
+        $user    = $request->user();
+        $search  = $request->query('search');
+        $perPage = $request->query('per_page', 20);
+
+        $query = ServiceItem::with(['category', 'laundry_item'])->where('laundry_id', $user->laundry_id);
+
+        if (! empty($search)) {
+            $query->where('name', 'LIKE', '%' . $search . '%');
+        }
+
+        $items = $query->orderBy('created_at', 'desc')->paginate($perPage);
+
+        return ApiHelper::validResponse('Service items retrieved successfully!', $items);
     }
 
-    public function create()
+    public function get_service_item(Request $request, $id)
     {
-        return theme_view('pages.service-items.form');
+        $user = $request->user();
+
+        $serviceItem = ServiceItem::where('id', $id)->where('laundry_id', $user->laundry_id)->firstOrFail();
+
+        return ApiHelper::validResponse('Service item retrieved successfully!', $serviceItem);
     }
 
-    public function store(Request $request)
+    public function create_service_item(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'price' => 'required|numeric',
+        $validator = Validator::make($request->all(), [
+            'service_category_id' => 'required|integer',
+            'laundry_item_id'     => 'nullable|integer',
+            'name'                => 'required|string|max:150',
+            'price'               => 'required|numeric|min:0',
+            'unit_type'           => 'required|in:per_item,per_kg',
+            'turnaround_time'     => 'nullable|integer|min:0',
         ]);
-        $request->merge(['hotel_id' => laundryId()]);
 
-        LaundryService::create($request->all());
+        if ($validator->fails()) {
+            return response(['errors' => $validator->errors()->all(), 'code' => 422], 422);
+        }
 
-        return redirect()->route('laundry-services.index')->with('success', 'Service created successfully.');
+        $user = $request->user();
+
+        try {
+            $serviceItem = ServiceItem::create([
+                'laundry_id'          => $user->laundry_id,
+                'service_category_id' => $request->service_category_id,
+                'laundry_item_id'     => $request->laundry_item_id,
+                'name'                => $request->name,
+                'price'               => $request->price,
+                'unit_type'           => $request->unit_type,
+                'turnaround_time'     => $request->turnaround_time,
+            ]);
+
+            return ApiHelper::validResponse('Service item created successfully!', $serviceItem);
+        } catch (\Exception $e) {
+            Log::error('Error creating service item: ' . $e->getMessage());
+            return ApiHelper::problemResponse('Failed to create service item', 500);
+        }
     }
 
-    public function edit(LaundryService $laundryService)
+    public function update_service_item(Request $request, $id)
     {
-        return view('dashboard.laundry-services.edit', compact('laundryService'));
-    }
-
-    public function update(Request $request, LaundryService $laundryService)
-    {
-        $request->validate([
-            'name' => 'required',
-            'price' => 'required|numeric',
+        $validator = Validator::make($request->all(), [
+            'service_category_id' => 'required|integer',
+            'laundry_item_id'     => 'nullable|integer',
+            'name'                => 'required|string|max:150',
+            'price'               => 'required|numeric|min:0',
+            'unit_type'           => 'required|in:per_item,per_kg',
+            'turnaround_time'     => 'nullable|integer|min:0',
         ]);
 
-        $laundryService->update($request->all());
+        if ($validator->fails()) {
+            return response(['errors' => $validator->errors()->all(), 'code' => 422], 422);
+        }
 
-        return redirect()->route('laundry-services.index')->with('success', 'Service updated successfully.');
+        $user = $request->user();
+
+        try {
+            $serviceItem = ServiceItem::where('id', $id)
+                ->where('laundry_id', $user->laundry_id)
+                ->firstOrFail();
+
+            $serviceItem->update([
+                'service_category_id' => $request->service_category_id,
+                'laundry_item_id'     => $request->laundry_item_id,
+                'name'                => $request->name,
+                'price'               => $request->price,
+                'unit_type'           => $request->unit_type,
+                'turnaround_time'     => $request->turnaround_time,
+            ]);
+
+            return ApiHelper::validResponse('Service item updated successfully!', $serviceItem);
+        } catch (\Exception $e) {
+            return ApiHelper::problemResponse('Failed to update service item', 500);
+        }
     }
 
-    public function destroy(LaundryService $laundryService)
+    public function delete_service_item(Request $request, $id)
     {
-        $laundryService->delete();
-        return redirect()->route('laundry-services.index')->with('success', 'Service deleted successfully.');
+        $user = $request->user();
+
+        try {
+            $serviceItem = ServiceItem::where('id', $id)
+                ->where('laundry_id', $user->laundry_id)
+                ->firstOrFail();
+
+            $serviceItem->delete();
+
+            return ApiHelper::validResponse('Service item deleted successfully!', null);
+        } catch (\Exception $e) {
+            return ApiHelper::problemResponse('Failed to delete service item', 500);
+        }
     }
 }
