@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('remember_token')->nullable()->change();
+            $table->string('otp')->nullable();
             $table->timestamp('otp_expires_at')->nullable();
         });
 
@@ -25,8 +25,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             // rollback
-            $table->string('remember_token')->nullable(false)->change();
-            $table->dropColumn('otp_expires_at');
+            $table->dropColumn(['otp', 'otp_expires_at']);
         });
     }
 };
