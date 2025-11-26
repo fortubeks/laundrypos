@@ -18,6 +18,7 @@ class RegisteredUserController extends Controller
         $validator = Validator::make($request->all(), [
             'name'     => 'required|string|max:80',
             'email'    => 'required|email|unique:users,email',
+            'phone'    => 'required|string|max:20',
             'password' => 'required|string|min:6',
         ]);
 
@@ -31,9 +32,10 @@ class RegisteredUserController extends Controller
             $user = User::create([
                 'name'           => $request->name,
                 'email'          => $request->email,
+                'phone'          => $request->phone,
                 'password'       => Hash::make($request->password),
                 'role'           => 'Super Admin',
-                'remember_token' => $otp,
+                'otp'            => $otp,
                 'otp_expires_at' => now()->addMinutes(10),
             ]);
 
@@ -59,7 +61,7 @@ class RegisteredUserController extends Controller
             return ApiHelper::problemResponse('User not found.', 404);
         }
 
-        if ($user->remember_token !== $request->otp) {
+        if ($user->otp !== $request->otp) {
             return ApiHelper::problemResponse('Invalid OTP.', 422);
         }
 
@@ -68,7 +70,7 @@ class RegisteredUserController extends Controller
         }
 
         $user->email_verified_at = now();
-        $user->remember_token    = null;
+        $user->otp            = null;
         $user->otp_expires_at    = null;
         $user->save();
 
@@ -99,7 +101,7 @@ class RegisteredUserController extends Controller
         // Generate new OTP
         $otp = rand(100000, 999999);
 
-        $user->remember_token = $otp;
+        $user->otp = $otp;
         $user->otp_expires_at = now()->addMinutes(10);
         $user->save();
 

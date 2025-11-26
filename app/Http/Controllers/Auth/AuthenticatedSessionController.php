@@ -97,7 +97,7 @@ class AuthenticatedSessionController extends Controller
 
         $otp = rand(100000, 999999);
 
-        $user->remember_token = $otp;
+        $user->otp = $otp;
         $user->otp_expires_at = now()->addMinutes(10);
         $user->save();
 
@@ -124,7 +124,7 @@ class AuthenticatedSessionController extends Controller
         // Generate new OTP
         $otp = rand(100000, 999999);
 
-        $user->remember_token = $otp;
+        $user->otp = $otp;
         $user->otp_expires_at = now()->addMinutes(10);
         $user->save();
 
@@ -149,7 +149,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         // OTP validation
-        if ($user->remember_token !== $request->otp) {
+        if ($user->otp !== $request->otp) {
             return ApiHelper::problemResponse('Invalid OTP.', 422);
         }
 
@@ -159,7 +159,7 @@ class AuthenticatedSessionController extends Controller
 
         // Update password
         $user->password       = Hash::make($request->new_password);
-        $user->remember_token = null;
+        $user->otp = null;
         $user->otp_expires_at = null;
         $user->save();
 
