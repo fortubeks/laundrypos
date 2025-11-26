@@ -38,7 +38,7 @@ class CustomerController extends Controller
 
         return ApiHelper::validResponse('Customers retrieved successfully!', $customers);
     }
-    
+
     public function get_customer(Request $request, $id)
     {
         $user = $request->user();
@@ -57,7 +57,7 @@ class CustomerController extends Controller
     public function create_customer(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'title'       => 'required|string|max:80',
+            'title'       => 'nullable|string|max:80',
             'first_name'  => 'required|string|max:80',
             'last_name'   => 'nullable|string|max:80',
             'other_names' => 'nullable|string|max:80',

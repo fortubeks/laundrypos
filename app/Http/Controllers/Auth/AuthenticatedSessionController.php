@@ -7,11 +7,11 @@ use App\Mail\EmailVerificationOtp;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Hash;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -39,6 +39,13 @@ class AuthenticatedSessionController extends Controller
         // ❗ BLOCK UNVERIFIED USERS
         if (! $user->email_verified_at) {
             Auth::logout();
+            $otp = rand(100000, 999999);
+            $user->otp            = $otp;
+            $user->otp_expires_at = now()->addMinutes(10);
+            $user->save();
+
+            Mail::to($user->email)->send(new EmailVerificationOtp($otp));
+
             return ApiHelper::problemResponse('Please verify your email before logging in.', 403);
         }
 
@@ -97,7 +104,7 @@ class AuthenticatedSessionController extends Controller
 
         $otp = rand(100000, 999999);
 
-        $user->otp = $otp;
+        $user->otp            = $otp;
         $user->otp_expires_at = now()->addMinutes(10);
         $user->save();
 
@@ -124,7 +131,7 @@ class AuthenticatedSessionController extends Controller
         // Generate new OTP
         $otp = rand(100000, 999999);
 
-        $user->otp = $otp;
+        $user->otp            = $otp;
         $user->otp_expires_at = now()->addMinutes(10);
         $user->save();
 
@@ -159,7 +166,7 @@ class AuthenticatedSessionController extends Controller
 
         // Update password
         $user->password       = Hash::make($request->new_password);
-        $user->otp = null;
+        $user->otp            = null;
         $user->otp_expires_at = null;
         $user->save();
 

@@ -39,6 +39,7 @@ class RegisteredUserController extends Controller
                 'otp_expires_at' => now()->addMinutes(10),
             ]);
 
+            Log::info('New User: ' . $user);
             Mail::to($user->email)->send(new EmailVerificationOtp($otp));
 
             return ApiHelper::validResponse('Registration successful — verify your email.', null);
@@ -52,29 +53,34 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'otp'   => 'required|string',
+            'otp'   => 'required|string|max:6',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        try {
+            $user = User::where('email', $request->email)->first();
 
-        if (! $user) {
-            return ApiHelper::problemResponse('User not found.', 404);
+            if (! $user) {
+                return ApiHelper::problemResponse('User not found.', 404);
+            }
+
+            if ($user->otp !== $request->otp) {
+                return ApiHelper::problemResponse('Invalid OTP.', 422);
+            }
+
+            if ($user->otp_expires_at && now()->greaterThan($user->otp_expires_at)) {
+                return ApiHelper::problemResponse('OTP expired.', 422);
+            }
+
+            $user->email_verified_at = now();
+            $user->otp               = null;
+            $user->otp_expires_at    = null;
+            $user->save();
+
+            return ApiHelper::validResponse('Email verified successfully.', null);
+        } catch (\Exception $e) {
+            Log::error('Email Verification Error: ' . $e->getMessage());
+            return ApiHelper::problemResponse($e->getMessage(), 500);
         }
-
-        if ($user->otp !== $request->otp) {
-            return ApiHelper::problemResponse('Invalid OTP.', 422);
-        }
-
-        if ($user->otp_expires_at && now()->greaterThan($user->otp_expires_at)) {
-            return ApiHelper::problemResponse('OTP expired.', 422);
-        }
-
-        $user->email_verified_at = now();
-        $user->otp            = null;
-        $user->otp_expires_at    = null;
-        $user->save();
-
-        return ApiHelper::validResponse('Email verified successfully.', null);
     }
 
     public function resend_otp(Request $request)
@@ -83,32 +89,38 @@ class RegisteredUserController extends Controller
             'email' => 'required|email',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        try {
 
-        if (! $user) {
-            return ApiHelper::problemResponse('User not found.', 404);
+            $user = User::where('email', $request->email)->first();
+
+            if (! $user) {
+                return ApiHelper::problemResponse('User not found.', 404);
+            }
+
+            if ($user->email_verified_at !== null) {
+                return ApiHelper::problemResponse('Email is already verified.', 422);
+            }
+
+            // Optional: prevent spam (resend allowed every 60 seconds)
+            if ($user->otp_expires_at && now()->lessThan($user->otp_expires_at->subMinutes(9))) {
+                return ApiHelper::problemResponse('Please wait before requesting another OTP.', 429);
+            }
+
+            // Generate new OTP
+            $otp = rand(100000, 999999);
+
+            $user->otp            = $otp;
+            $user->otp_expires_at = now()->addMinutes(10);
+            $user->save();
+
+            // Send email
+            Mail::to($user->email)->send(new EmailVerificationOtp($otp));
+
+            return ApiHelper::validResponse('A new verification code has been sent to your email.', null);
+        } catch (\Exception $e) {
+            Log::error('Resend OTP Error: ' . $e->getMessage());
+            return ApiHelper::problemResponse($e->getMessage(), 500);
         }
-
-        if ($user->email_verified_at !== null) {
-            return ApiHelper::problemResponse('Email is already verified.', 422);
-        }
-
-        // Optional: prevent spam (resend allowed every 60 seconds)
-        if ($user->otp_expires_at && now()->lessThan($user->otp_expires_at->subMinutes(9))) {
-            return ApiHelper::problemResponse('Please wait before requesting another OTP.', 429);
-        }
-
-        // Generate new OTP
-        $otp = rand(100000, 999999);
-
-        $user->otp = $otp;
-        $user->otp_expires_at = now()->addMinutes(10);
-        $user->save();
-
-        // Send email
-        Mail::to($user->email)->send(new EmailVerificationOtp($otp));
-
-        return ApiHelper::validResponse('A new verification code has been sent to your email.', null);
     }
 
 }
