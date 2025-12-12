@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Helpers\ApiHelper;
 use App\Http\Controllers\Controller;
+use App\Jobs\SendFollowupEmailJob;
 use App\Mail\EmailVerificationOtp;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -39,8 +40,16 @@ class RegisteredUserController extends Controller
                 'otp_expires_at' => now()->addMinutes(10),
             ]);
 
-            Log::info('New User: ' . $user);
             Mail::to($user->email)->send(new EmailVerificationOtp($otp));
+
+            SendFollowupEmailJob::dispatch($user, 1)->delay(now()->addWeek(1));
+            SendFollowupEmailJob::dispatch($user, 2)->delay(now()->addWeek(2));
+            SendFollowupEmailJob::dispatch($user, 3)->delay(now()->addWeek(3));
+
+            // test with immediate dispatch
+            // SendFollowupEmailJob::dispatch($user, 1)->delay(now()->addMinutes(1));
+            // SendFollowupEmailJob::dispatch($user, 2)->delay(now()->addMinutes(2));
+            // SendFollowupEmailJob::dispatch($user, 3)->delay(now()->addMinutes(3));
 
             return ApiHelper::validResponse('Registration successful — verify your email.', null);
         } catch (\Exception $e) {
