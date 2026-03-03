@@ -29,4 +29,20 @@ class Order extends Model
         return $this->hasMany(OrderServiceItem::class, 'order_id');
     }
 
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function getOutstandingBalance()
+    {
+        return $this->total_amount - $this->payments->sum('amount');
+    }
+    public function getAmountPaid()
+    {
+        //check all payments that have the order_id
+        $payments = Payment::where('order_id', $this->id)->sum('amount');
+        return $payments;
+    }
+
 }
