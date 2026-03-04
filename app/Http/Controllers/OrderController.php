@@ -19,7 +19,7 @@ class OrderController extends Controller
         $search      = $request->input('search', '');
         $currentPage = $request->input('page', 1);
 
-        $query = Order::with(['items.serviceItem', 'customer'])
+        $query = Order::with(['items.serviceItem', 'customer', 'payments'])
             ->where('laundry_id', $user->laundry_id)
             ->orderBy('created_at', 'desc');
 
@@ -27,7 +27,7 @@ class OrderController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->whereHas('customer', function ($custQuery) use ($search) {
                     $custQuery->where('first_name', 'like', '%' . $search . '%')
-                              ->orWhere('last_name', 'like', '%' . $search . '%');
+                        ->orWhere('last_name', 'like', '%' . $search . '%');
                 });
             });
             Log::info('Search applied: ' . $search);
@@ -42,12 +42,16 @@ class OrderController extends Controller
     {
         $user = $request->user();
 
-        $order = Order::with('items.serviceItem', 'customer')
+        $order = Order::with('items.serviceItem', 'customer', 'payments')
             ->where('id', $id)
             ->where('laundry_id', $user->laundry_id)
             ->firstOrFail();
 
-        return ApiHelper::validResponse('Order retrieved successfully!', $order);
+        return ApiHelper::validResponse('Order retrieved successfully!', [
+            'order'         => $order,
+            'total_payment' => $order->getAmountPaid(),
+            'amount_due'    => $order->getOutstandingBalance(),
+        ]);
     }
 
     public function create_order(Request $request)
@@ -155,7 +159,7 @@ class OrderController extends Controller
             $order->update([
                 'name'         => $order->name,
                 'customer_id'  => $request->customer_id,
-                'total_amount' => $request->total_amount,
+                'total_amount' => $request->items ? collect($request->items)->sum('subtotal') : $order->total_amount,
                 'order_date'   => $request->order_date,
                 'due_date'     => $request->due_date,
                 'status'       => $request->status ?? $order->status,
