@@ -51,19 +51,19 @@ class PaymentsController extends Controller
         $payment->mode_of_payment = $request->mode_of_payment;
         $payment->notes           = $request->notes;
 
-        $status = "Processing";
 
         //update the order status
         $totalPayments = Payment::where('order_id', $order->id)->sum('amount') + $request->amount;
+
         if ($totalPayments >= $order->total_amount) {
-            $status = "Completed";
+            $order->status = "delivered";
         } elseif ($totalPayments > 0 && $totalPayments < $order->total_amount) {
-            $status = "Processing";
+            $order->status = "processing";
         } else {
-            $status = "Pending";
+            $order->status = "pending";
         }
 
-        $affected = DB::update('update orders set status = ? where id = ?', [$status, $order->id]);
+        $order->save();
 
         $payment->save();
 
@@ -80,11 +80,11 @@ class PaymentsController extends Controller
         //update the order status
         $totalPayments = Payment::where('order_id', $order->id)->sum('amount');
         if ($totalPayments >= $order->total_amount) {
-            $order->status = "Completed";
+            $order->status = "delivered";
         } elseif ($totalPayments > 0 && $totalPayments < $order->total_amount) {
-            $order->status = "Processing";
+            $order->status = "processing";
         } else {
-            $order->status = "Pending";
+            $order->status = "pending";
         }
         $order->save();
 
