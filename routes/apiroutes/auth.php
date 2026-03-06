@@ -25,3 +25,8 @@ Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
 });
+Route::post('/social-login', [App\Http\Controllers\Auth\SocialLoginController::class, 'handleCallback']);
+
+Route::get('/simulate-server-error', function () {
+    throw new Exception('Simulated API server error');
+});

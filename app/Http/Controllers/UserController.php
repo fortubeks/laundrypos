@@ -14,7 +14,7 @@ class UserController extends Controller
             // $user_id = auth()->user()->id;
             $user = $request->user();
 
-            $user = User::findOrFail($user->id);
+            $user = User::with('app_settings')->findOrFail($user->id);
 
             return ApiHelper::validResponse('user retrieved successfully!', $user);
         } catch (\Exception $e) {

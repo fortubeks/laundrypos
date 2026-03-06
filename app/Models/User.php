@@ -52,6 +52,16 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    public function user_account()
+    {
+        return $this->belongsTo('App\Models\User', 'user_account_id');
+    }
+
+    public function app_settings()
+    {
+        return $this->hasOne('App\Models\Setting');
+    }
+
     public function laundry()
     {
         return $this->belongsTo(Laundry::class);

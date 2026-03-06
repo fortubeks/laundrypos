@@ -13,7 +13,8 @@ class LaundryItemController extends Controller
     {
         $user    = $request->user();
         $search  = $request->query('search');
-        $perPage = $request->query('per_page', 20);
+        $page    = $request->query('page', 1);
+        $perPage = $request->query('per_page', 25);
 
         $query = LaundryItem::where('laundry_id', $user->laundry_id);
 
@@ -22,7 +23,8 @@ class LaundryItemController extends Controller
             $query->where('name', 'LIKE', '%' . $search . '%');
         }
 
-        $items = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        $items = $query->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
 
         return ApiHelper::validResponse('Laundry items retrieved successfully!', $items);
     }

@@ -5,6 +5,7 @@ use App\Helpers\ApiHelper;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendFollowupEmailJob;
 use App\Mail\EmailVerificationOtp;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -127,6 +128,19 @@ class RegisteredUserController extends Controller
         } catch (\Exception $e) {
             Log::error('Resend OTP Error: ' . $e->getMessage());
             return ApiHelper::problemResponse($e->getMessage(), 500);
+        }
+    }
+
+    public function initializeUserSettings($user)
+    {
+        if (!Setting::where('user_id', '=', $user->id)->exists()) {
+            // setings not found
+            //create and store new app setting and then redirect to page
+            $setting = new Setting;
+            $setting->user_id = $user->id;
+            $setting->sms_api_key = 'a13babcd7b8dea714c3454f865f97d36ab76fbde';
+            $setting->sms_api_username = 'fortubeks2010@hotmail.com';
+            $setting->save();
         }
     }
 

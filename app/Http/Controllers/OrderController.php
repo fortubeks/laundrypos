@@ -2,10 +2,13 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ApiHelper;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderServiceItem;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -108,6 +111,8 @@ class OrderController extends Controller
                 ]);
             }
 
+            // $this->sendCustomerOrderPlacedNotification($order, $user);
+
             DB::commit();
 
             return ApiHelper::validResponse('Order created successfully!', [
@@ -119,6 +124,27 @@ class OrderController extends Controller
             DB::rollBack();
             Log::error('Failed to create order: ' . $e->getMessage());
             return ApiHelper::problemResponse('Failed to create order', 500);
+        }
+    }
+
+    public function sendCustomerOrderPlacedNotification($order, $user)
+    {
+        try {
+            $customer      = Customer::findOrFail($order->customer_id);
+            $api_key       = $user->user_account->app_settings->sms_api_key;
+            $username      = $user->user_account->app_settings->sms_api_username;
+            $sender        = $user->user_account->app_settings->sms_sender;
+            $business_name = $user->user_account->app_settings->business_name;
+            $msg           = 'Thank you for your order. Your expected order due date is ' . $order->due_date . '. Thank you for choosing' . $business_name;
+            $request_url   = 'https://api.ebulksms.com/sendsms?username=' . $username . '&apikey=' . $api_key . '&sender=' . $sender . '&messagetext=' . $msg . '&flash=0&recipients=' . $customer->phone;
+            $sms_response  = "";
+            if (env('APP_ENV') == 'production') {
+                $sms_response = Http::get($request_url);
+                sendwhatsappnotification("new_order", $customer->whatsappNumber($user), "new_order_1", $order->due_date, $order->id);
+            }
+        } catch (RequestException $exception) {
+            // Handle outer exception
+            logger($exception);
         }
     }
 

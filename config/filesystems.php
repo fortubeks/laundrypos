@@ -60,6 +60,12 @@ return [
             'report' => false,
         ],
 
+        'logo_images'    => [
+            'driver'     => 'local',
+            'root'       => storage_path('app/public/logo_images'),
+            'url'        => env('APP_URL') . '/storage',
+            'visibility' => 'public',
+        ],
     ],
 
     /*

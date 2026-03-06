@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -9,5 +10,9 @@ Route::group(['prefix' => 'user', 'middleware' => ['auth:sanctum']], function ()
     Route::put('/', [UserController::class, 'updateProfile']);
     Route::put('/change-password', [UserController::class, 'changePassword']);
     Route::delete('/', [UserController::class, 'delete_user']);
+
+    Route::get('/settings', [SettingsController::class, 'index']);
+    Route::post('/change-logo', [SettingsController::class, 'changeLogo']);
+    Route::put('/settings', [SettingsController::class,'update']);
 
 });

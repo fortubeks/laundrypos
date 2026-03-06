@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class SocialLogin extends Model
+{
+    use HasFactory;
+    protected $fillable = [
+        'user_id',
+        'provider',
+        'provider_id',
+        'provider_token',
+        'provider_refresh_token',
+        'avatar'
+    ];
+
+    // Relationship to the user model
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}
