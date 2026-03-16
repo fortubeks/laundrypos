@@ -1,4 +1,4 @@
-<!doctype html>
+{{-- <!doctype html>
 <html lang="en">
 
 <head>
@@ -92,7 +92,7 @@
                             <a class="nav-link page-scroll" href="#contact">Contact</a>
                         </li>
                         <li>
-                            <a href="{{route('login')}}" class="btn btn-primary">Sign In</a>
+                            <a href="{{ url('/login') }}" class="btn btn-primary">Sign In</a>
                         </li>
                     </ul>
 
@@ -109,7 +109,7 @@
                         <div class="caption">
                             <h1>Powerful Laundry POS Software for Smarter, Faster Business</h1>
                             <p class="sub">Manage orders, track payments, monitor staff, and grow your laundry business — all in one simple dashboard.</p>
-                            <a class="btn btn-primary" href="{{route('register')}}">Start Free Trial</a>
+                            <a class="btn btn-primary" href="{{ url('/register') }}">Start Free Trial</a>
                             <!-- / Macbook IMG / -->
                             <img class="img-fluid mx-auto wow fadeInUp" data-wow-duration="1s" data-wow-delay=".3s" src="{{url('landing-page/imgs/macbook.png')}}" alt="macbook">
                         </div>
@@ -456,4 +456,6 @@
 
 </body>
 
-</html>
+</html> --}}
+
+<h1>API is running</h1>
