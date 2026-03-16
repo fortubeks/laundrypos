@@ -33,7 +33,6 @@ class OrderController extends Controller
                         ->orWhere('last_name', 'like', '%' . $search . '%');
                 });
             });
-            Log::info('Search applied: ' . $search);
         }
 
         $orders = $query->paginate($perPage, ['*'], 'page', $currentPage);
@@ -140,7 +139,7 @@ class OrderController extends Controller
             $sms_response  = "";
             if (env('APP_ENV') == 'production') {
                 $sms_response = Http::get($request_url);
-                sendwhatsappnotification("new_order", $customer->whatsappNumber($user), "new_order_1", $order->due_date, $order->id);
+                sendwhatsappnotification("new_order", $customer->whatsappNumber($user), "order_confirmation", $order->due_date, $order->id);
             }
         } catch (RequestException $exception) {
             // Handle outer exception
