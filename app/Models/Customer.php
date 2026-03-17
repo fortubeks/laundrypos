@@ -5,7 +5,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Log;
 
 class Customer extends Model
 {
@@ -25,26 +24,42 @@ class Customer extends Model
 
     public function whatsappNumber($user = null)
     {
-        //if number has space remove it
-        $whatsapp_number = removeSpaces($this->phone);
-        //if number has 0 as first character remove it
-        $whatsapp_number = ltrim($whatsapp_number, '0');
-        //if number has + remove it
-        if (substr($whatsapp_number, 0, 1) === '+') {
-            return ltrim($whatsapp_number, '+');
+        if (! $this->phone) {
+            return null;
         }
+
+        // Remove spaces
+        $whatsapp_number = removeSpaces($this->phone);
+
+        // Remove +
+        $whatsapp_number = ltrim($whatsapp_number, '+');
+
+        // Remove leading 0
+        if (str_starts_with($whatsapp_number, '0')) {
+            $whatsapp_number = substr($whatsapp_number, 1);
+        }
+
+        $countryCode = null;
+
         if ($this->country) {
-            return $this->country->phonecode . $whatsapp_number;
-        } else {
-            if ($user && $user->user_account->app_settings->business_currency) {
-                $country = Country::where('currency', $user->user_account->app_settings->business_currency)->first();
-                if ($country) {
-                    return $country->phonecode . $whatsapp_number;
-                } else {
-                    return $whatsapp_number;
-                }
+            $countryCode = $this->country->phonecode;
+        } elseif ($user && $user->user_account->app_settings->business_currency) {
+            $country = Country::where('currency', $user->user_account->app_settings->business_currency)->first();
+            if ($country) {
+                $countryCode = $country->phonecode;
             }
         }
 
+        if ($countryCode) {
+
+            // If number already starts with the country code, don't add it again
+            if (str_starts_with($whatsapp_number, $countryCode)) {
+                return $whatsapp_number;
+            }
+
+            return $countryCode . $whatsapp_number;
+        }
+
+        return $whatsapp_number;
     }
 }

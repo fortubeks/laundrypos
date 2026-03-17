@@ -136,7 +136,7 @@ if (! function_exists('businesswhatsappnumber')) {
 function sendwhatsappnotification($type, $to, $template_name, $due_date, $order_id)
 {
     try {
-        $url = "https://graph.facebook.com/v17.0/108752848993090/messages";
+        $url = "https://graph.facebook.com/v22.0/108752848993090/messages";
 
         $client  = new \GuzzleHttp\Client();
         $headers = ["Authorization" => "Bearer " . env('WHATSAPP_TOKEN'), "Content-Type" => "application/json"];

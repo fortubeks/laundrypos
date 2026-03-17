@@ -69,9 +69,9 @@ class SendMarketingCampaignJob implements ShouldQueue
                 return;
             }
 
-            $title     = $this->content['title'] ?? '';
-            $message   = $this->content['message'] ?? '';
-            $url       = 'https://wa.me/' . $this->businessWhatsAppNumber . '?text=' . urlencode($message);
+            $title   = $this->content['title'] ?? '';
+            $message = $this->content['message'] ?? '';
+            $url     = 'https://wa.me/' . $this->businessWhatsAppNumber . '?text=' . urlencode($message);
 
             try {
 
@@ -83,11 +83,18 @@ class SendMarketingCampaignJob implements ShouldQueue
                     return;
                 }
 
-                $client = new Client([
-                    'base_uri' => 'https://graph.facebook.com/v17.0/',
+                Log::info('Sending WhatsApp', [
+                    'to'         => $to,
+                    'token'      => substr(env('WHATSAPP_TOKEN'), 0, 10) . '...', // hide rest
+                    'template'   => 'marketing_1',
+                    'parameters' => [$this->businessName, $title, $message, $url],
                 ]);
 
-                $client->post('108752848993090/messages', [
+                $client = new Client([
+                    'base_uri' => 'https://graph.facebook.com/v22.0/',
+                ]);
+
+                $client->post('104443719426225/messages', [
                     'headers' => [
                         'Authorization' => 'Bearer ' . env('WHATSAPP_TOKEN'),
                         'Content-Type'  => 'application/json',
@@ -97,7 +104,7 @@ class SendMarketingCampaignJob implements ShouldQueue
                         'to'                => $to,
                         'type'              => 'template',
                         'template'          => [
-                            'name'       => 'marketing_message',
+                            'name'       => 'marketing_1',
                             'language'   => [
                                 'code' => 'en',
                             ],
@@ -108,7 +115,7 @@ class SendMarketingCampaignJob implements ShouldQueue
                                         ['type' => 'text', 'text' => $this->businessName],
                                         ['type' => 'text', 'text' => $title],
                                         ['type' => 'text', 'text' => $message],
-                                        ['type'=> 'text', 'text'=> $url],
+                                        ['type' => 'text', 'text' => $url],
                                     ],
                                 ],
                             ],
@@ -117,7 +124,7 @@ class SendMarketingCampaignJob implements ShouldQueue
                 ]);
 
             } catch (RequestException $e) {
-
+                Log::info('Attempting to send marketing WhatsApp message to customer ' . $customer->id . ' at number: ' . $to);
                 Log::error('Marketing WhatsApp failed for customer ' . $customer->id, [
                     'error'    => $e->getMessage(),
                     'response' => optional($e->getResponse())->getBody()->getContents(),
