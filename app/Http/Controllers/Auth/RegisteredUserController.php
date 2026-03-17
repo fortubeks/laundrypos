@@ -9,14 +9,62 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 
 class RegisteredUserController extends Controller
 {
     public function store(Request $request)
     {
+        $key = 'register:' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return response()->json([
+                'message' => 'Too many registration attempts. Try again later.',
+            ], 429);
+        }
+
+        RateLimiter::hit($key, 60);
+
+        $turnstile = Http::asForm()->post(
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            [
+                'secret'   => env('TURNSTILE_SECRET_KEY'),
+                'response' => $request->captcha,
+                'remoteip' => $request->ip(),
+            ]
+        );
+
+        if (! data_get($turnstile->json(), 'success')) {
+            return response()->json([
+                'message' => 'Captcha verification failed.',
+            ], 422);
+        }
+
+        if ($request->filled('company_name')) {
+            return response()->json([
+                'message' => 'Invalid submission.',
+            ], 422);
+        }
+
+        $blockedDomains = [
+            'mailinator.com',
+            '10minutemail.com',
+            'guerrillamail.com',
+            'yopmail.com',
+        ];
+
+        $domain = substr(strrchr($request->email, "@"), 1);
+
+        if (in_array($domain, $blockedDomains)) {
+            return response()->json([
+                'message' => 'Disposable emails are not allowed.',
+            ], 422);
+        }
+
         $validator = Validator::make($request->all(), [
             'name'     => 'required|string|max:80',
             'email'    => 'required|email|unique:users,email',
@@ -133,12 +181,12 @@ class RegisteredUserController extends Controller
 
     public function initializeUserSettings($user)
     {
-        if (!Setting::where('user_id', '=', $user->id)->exists()) {
+        if (! Setting::where('user_id', '=', $user->id)->exists()) {
             // setings not found
             //create and store new app setting and then redirect to page
-            $setting = new Setting;
-            $setting->user_id = $user->id;
-            $setting->sms_api_key = 'a13babcd7b8dea714c3454f865f97d36ab76fbde';
+            $setting                   = new Setting;
+            $setting->user_id          = $user->id;
+            $setting->sms_api_key      = 'a13babcd7b8dea714c3454f865f97d36ab76fbde';
             $setting->sms_api_username = 'fortubeks2010@hotmail.com';
             $setting->save();
         }
