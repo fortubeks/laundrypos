@@ -2,13 +2,9 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ApiHelper;
-use App\Mail\MarketingEmail;
+use App\Jobs\SendMarketingCampaignJob;
 use App\Models\Customer;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class MarketingController extends Controller
@@ -42,13 +38,14 @@ class MarketingController extends Controller
             return response(['errors' => $validator->errors()->all(), 'code' => 422], 422);
         }
 
-        $user         = $request->user();
-        $laundryId    = $user->laundry_id;
-        $businessName = $user->user_account?->app_settings?->business_name ?? $user->name ?? 'Your Laundry';
-        $templateId   = $request->input('template_id');
-        $content      = $request->input('content');
-        $customerIds  = $request->input('customer_ids');
-        $channel      = $request->input('channel');
+        $user                   = $request->user();
+        $laundryId              = $user->laundry_id;
+        $businessName           = $user->user_account?->app_settings?->business_name ?? $user->name ?? 'Your Laundry';
+        $businessWhatsAppNumber = businesswhatsappnumber($user);
+        $templateId             = $request->input('template_id');
+        $content                = $request->input('content');
+        $customerIds            = $request->input('customer_ids');
+        $channel                = $request->input('channel');
 
         /* Fetch all requested customers belonging to this laundry */
         $customers = Customer::whereIn('id', $customerIds)
@@ -63,33 +60,15 @@ class MarketingController extends Controller
         $emailSent = $emailFailed = $waSent = $waFailed = 0;
 
         foreach ($customers as $customer) {
-            $customerName = trim(
-                ($customer->title ? $customer->title . ' ' : '') .
-                $customer->first_name .
-                ($customer->last_name ? ' ' . $customer->last_name : '')
+
+            SendMarketingCampaignJob::dispatch(
+                $customer,
+                $content,
+                $businessName,
+                $channel,
+                $templateId,
+                $businessWhatsAppNumber
             );
-
-            /* ── Email ─────────────────────────────────────────────── */
-            if (in_array($channel, ['email', 'both']) && $customer->email) {
-                try {
-                    Mail::to($customer->email)->send(
-                        new MarketingEmail($templateId, $content, $customerName, $businessName)
-                    );
-                    $emailSent++;
-                } catch (\Exception $e) {
-                    Log::error('Marketing email failed for customer ' . $customer->id . ': ' . $e->getMessage());
-                    $emailFailed++;
-                }
-            }
-
-            /* ── WhatsApp ───────────────────────────────────────────── */
-            if (in_array($channel, ['whatsapp', 'both']) && $customer->phone) {
-                if ($this->sendWhatsApp($customer, $content, $businessName, $user)) {
-                    $waSent++;
-                } else {
-                    $waFailed++;
-                }
-            }
         }
 
         $parts = [];
@@ -115,41 +94,75 @@ class MarketingController extends Controller
      * Send a WhatsApp text message to a single customer.
      * Returns true on success, false on failure.
      */
-    private function sendWhatsApp(Customer $customer, array $content, string $businessName, $user): bool
-    {
-        $to = $customer->whatsappNumber($user);
-        if (! $to) {
-            return false;
-        }
+    // private function sendWhatsApp(Customer $customer, array $content, string $businessName, $user): bool
+    // {
+    //     $to = $customer->whatsappNumber($user);
 
-        $lines = array_filter([
-            '*' . $businessName . '*',
-            ! empty($content['title']) ? '*' . $content['title'] . '*' : null,
-            $content['message'] ?? null,
-            ! empty($content['buttonText']) ? '— ' . $content['buttonText'] : null,
-        ]);
+    //     if (! $to) {
+    //         return false;
+    //     }
 
-        $body = implode("\n\n", $lines);
+    //     $title      = $content['title'] ?? '';
+    //     $message    = $content['message'] ?? '';
+    //     $buttonText = $content['buttonText'] ?? '';
 
-        try {
-            $client = new Client();
-            $client->request('POST', 'https://graph.facebook.com/v17.0/108752848993090/messages', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . env('WHATSAPP_TOKEN'),
-                    'Content-Type'  => 'application/json',
-                ],
-                'json'    => [
-                    'messaging_product' => 'whatsapp',
-                    'recipient_type'    => 'individual',
-                    'to'                => $to,
-                    'type'              => 'text',
-                    'text'              => ['preview_url' => false, 'body' => $body],
-                ],
-            ]);
-            return true;
-        } catch (RequestException $e) {
-            Log::error('Marketing WhatsApp failed for customer ' . $customer->id . ': ' . $e->getMessage());
-            return false;
-        }
-    }
+    //     try {
+
+    //         $client = new Client([
+    //             'base_uri' => 'https://graph.facebook.com/v17.0/',
+    //         ]);
+
+    //         $client->post('108752848993090/messages', [
+    //             'headers' => [
+    //                 'Authorization' => 'Bearer ' . env('WHATSAPP_TOKEN'),
+    //                 'Content-Type'  => 'application/json',
+    //             ],
+    //             'json'    => [
+    //                 'messaging_product' => 'whatsapp',
+    //                 'to'                => $to,
+    //                 'type'              => 'template',
+    //                 'template'          => [
+    //                     'name'       => 'marketing_message',
+    //                     'language'   => [
+    //                         'code' => 'en',
+    //                     ],
+    //                     'components' => [
+    //                         [
+    //                             'type'       => 'body',
+    //                             'parameters' => [
+    //                                 [
+    //                                     'type' => 'text',
+    //                                     'text' => $businessName,
+    //                                 ],
+    //                                 [
+    //                                     'type' => 'text',
+    //                                     'text' => $title,
+    //                                 ],
+    //                                 [
+    //                                     'type' => 'text',
+    //                                     'text' => $message,
+    //                                 ],
+    //                                 [
+    //                                     'type' => 'text',
+    //                                     'text' => $buttonText,
+    //                                 ],
+    //                             ],
+    //                         ],
+    //                     ],
+    //                 ],
+    //             ],
+    //         ]);
+
+    //         return true;
+
+    //     } catch (RequestException $e) {
+
+    //         Log::error('Marketing WhatsApp failed for customer ' . $customer->id, [
+    //             'error'    => $e->getMessage(),
+    //             'response' => optional($e->getResponse())->getBody()->getContents(),
+    //         ]);
+
+    //         return false;
+    //     }
+    // }
 }

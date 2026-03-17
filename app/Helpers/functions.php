@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Country;
 use App\Models\Customer;
 use App\Models\LaundryItem;
 use App\Models\Order;
@@ -102,6 +103,36 @@ function removeSpaces($inputString)
     return str_replace(' ', '', $inputString);
 }
 
+if (! function_exists('businesswhatsappnumber')) {
+    function businesswhatsappnumber($user)
+    {
+        if (! $user) {
+            return null;
+        }
+
+        $settings = $user->user_account?->app_settings ?? $user->app_settings ?? null;
+        if (! $settings || ! $settings->business_phone) {
+            return null;
+        }
+
+        $whatsappNumber = removeSpaces($settings->business_phone);
+        $whatsappNumber = ltrim($whatsappNumber, '0');
+
+        if (substr($whatsappNumber, 0, 1) === '+') {
+            return ltrim($whatsappNumber, '+');
+        }
+
+        if ($settings->business_currency) {
+            $country = Country::where('currency', $settings->business_currency)->first();
+            if ($country) {
+                return $country->phonecode . $whatsappNumber;
+            }
+        }
+
+        return $whatsappNumber;
+    }
+}
+
 function sendwhatsappnotification($type, $to, $template_name, $due_date, $order_id)
 {
     try {
@@ -117,6 +148,9 @@ function sendwhatsappnotification($type, $to, $template_name, $due_date, $order_
         ];
 
         if ($type == "new_order") {
+            $businessPhone = businesswhatsappnumber(auth()->user());
+            $businessPhone = preg_replace('/\D+/', '', (string) $businessPhone) ?? '';
+
             $arr = [
                 "type" => "text",
                 "text" => $due_date,
@@ -127,7 +161,7 @@ function sendwhatsappnotification($type, $to, $template_name, $due_date, $order_
             ];
             $arr2 = [
                 "type" => "text",
-                "text" => "/" . $order_id,
+                "text" => "https://wa.me/{$businessPhone}?text=I%20have%20a%20question%20about%20my%20order%20#{$order_id}",
             ];
 
             $myJSON  = json_encode($arr);
@@ -151,6 +185,7 @@ function sendwhatsappnotification($type, $to, $template_name, $due_date, $order_
                             "parameters" => [
                                 $myJSON,
                                 $myJSON2,
+                                $myJSON3,
                             ],
                             # end body
                         ],
@@ -158,14 +193,6 @@ function sendwhatsappnotification($type, $to, $template_name, $due_date, $order_
                         # The following part of this code example includes several possible button types,
                         # not all are required for an interactive message template API call.
 
-                        [
-                            "type"       => "button",
-                            "sub_type"   => "url",
-                            "index"      => "0",
-                            "parameters" => [
-                                $myJSON3,
-                            ],
-                        ],
 
                     ],
                 ],
