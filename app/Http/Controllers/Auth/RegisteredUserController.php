@@ -28,6 +28,8 @@ class RegisteredUserController extends Controller
         }
 
         RateLimiter::hit($key, 60);
+        Log::info($request->all());
+
 
         $turnstile = Http::asForm()->post(
             'https://challenges.cloudflare.com/turnstile/v0/siteverify',
@@ -37,6 +39,7 @@ class RegisteredUserController extends Controller
                 'remoteip' => $request->ip(),
             ]
         );
+        Log::info('Turnstile Response: ' . $turnstile->body());
 
         if (! data_get($turnstile->json(), 'success')) {
             return response()->json([
