@@ -5,7 +5,6 @@ use App\Helpers\ApiHelper;
 use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PaymentsController extends Controller
@@ -51,7 +50,6 @@ class PaymentsController extends Controller
         $payment->mode_of_payment = $request->mode_of_payment;
         $payment->notes           = $request->notes;
 
-
         //update the order status
         $totalPayments = Payment::where('order_id', $order->id)->sum('amount') + $request->amount;
 
@@ -72,9 +70,9 @@ class PaymentsController extends Controller
 
     public function destroy($id)
     {
-        $payment = Payment::find($id);
+        $payment = Payment::findOrFail($id);
 
-        $order = Order::find($payment->order_id);
+        $order = Order::findOrFail($payment->order_id);
         //delete the payment
         $payment->delete();
         //update the order status
