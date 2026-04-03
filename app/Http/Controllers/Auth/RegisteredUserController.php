@@ -30,7 +30,6 @@ class RegisteredUserController extends Controller
         RateLimiter::hit($key, 60);
         Log::info($request->all());
 
-
         $turnstile = Http::asForm()->post(
             'https://challenges.cloudflare.com/turnstile/v0/siteverify',
             [
@@ -69,10 +68,11 @@ class RegisteredUserController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name'     => 'required|string|max:80',
-            'email'    => 'required|email|unique:users,email',
-            'phone'    => 'required|string|max:20',
-            'password' => 'required|string|min:6',
+            'name'            => 'required|string|max:80',
+            'email'           => 'required|email|unique:users,email',
+            'phone'           => 'required|string|max:20',
+            'password'        => 'required|string|min:6',
+            'referral_source' => 'nullable|string|in:google_ads,instagram,facebook,friend,other',
         ]);
 
         if ($validator->fails()) {
@@ -83,13 +83,14 @@ class RegisteredUserController extends Controller
             $otp = rand(100000, 999999);
 
             $user = User::create([
-                'name'           => $request->name,
-                'email'          => $request->email,
-                'phone'          => $request->phone,
-                'password'       => Hash::make($request->password),
-                'role'           => 'User',
-                'otp'            => $otp,
-                'otp_expires_at' => now()->addMinutes(10),
+                'name'            => $request->name,
+                'email'           => $request->email,
+                'phone'           => $request->phone,
+                'password'        => Hash::make($request->password),
+                'role'            => 'User',
+                'referral_source' => $request->referral_source,
+                'otp'             => $otp,
+                'otp_expires_at'  => now()->addMinutes(10),
             ]);
 
             $user->user_account_id = $user->id;

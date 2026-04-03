@@ -5,6 +5,7 @@ use App\Helpers\ApiHelper;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderServiceItem;
+use App\Models\Setting;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -58,6 +59,19 @@ class OrderController extends Controller
 
     public function create_order(Request $request)
     {
+        $user = $request->user();
+
+        // Check if user has complete business information
+        $setting = Setting::where('user_id', $user->user_account_id)->first();
+
+        if (! $setting || ! $setting->isBusinessInfoComplete()) {
+            return response([
+                'message' => 'Your business information is incomplete. Please complete it in settings before creating orders.',
+                'errors'  => ['business_information' => 'Business information must be complete to create orders'],
+                'code'    => 422,
+            ], 422);
+        }
+
         $validator = Validator::make($request->all(), [
             // 'name'                    => 'required|string|max:255',
             'customer_id'             => 'required|integer',
@@ -80,8 +94,6 @@ class OrderController extends Controller
                 'code'   => 422,
             ], 422);
         }
-
-        $user = $request->user();
 
         DB::beginTransaction();
 
@@ -149,6 +161,19 @@ class OrderController extends Controller
 
     public function update_order(Request $request, $id)
     {
+        $user = $request->user();
+
+        // Check if user has complete business information
+        $setting = Setting::where('user_id', $user->user_account_id)->first();
+
+        if (! $setting || ! $setting->isBusinessInfoComplete()) {
+            return response([
+                'message' => 'Your business information is incomplete. Please complete it in settings before updating orders.',
+                'errors'  => ['business_information' => 'Business information must be complete to update orders'],
+                'code'    => 422,
+            ], 422);
+        }
+
         $validator = Validator::make($request->all(), [
             // 'name'                    => 'required|string|max:255',
             'customer_id'             => 'required|integer',
@@ -171,8 +196,6 @@ class OrderController extends Controller
                 'code'   => 422,
             ], 422);
         }
-
-        $user = $request->user();
 
         DB::beginTransaction();
 
