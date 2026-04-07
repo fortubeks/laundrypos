@@ -40,6 +40,7 @@ class SocialLoginController extends Controller
 
             $email      = $payload['email'] ?? null;
             $name       = $payload['name'] ?? 'Google User';
+            $phone      = $payload['phone_number'] ?? '0000000000';
             $providerId = $payload['sub'];
 
             if (! $email) {
@@ -59,7 +60,7 @@ class SocialLoginController extends Controller
                     'name'              => $name,
                     'password'          => Hash::make(Str::random(16)),
                     'email'             => $email,
-                    'phone'             => '0000000000',
+                    'phone'             => $phone,
                     'email_verified_at' => now(),
                     'role'              => 'Super Admin',
                 ]);

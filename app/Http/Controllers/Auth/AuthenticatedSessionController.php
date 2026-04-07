@@ -37,7 +37,7 @@ class AuthenticatedSessionController extends Controller
         $user = $request->user();
 
         // Block admin users from logging in via webapp
-        if (in_array($user->role, ['Admin', 'Super Admin'], true)) {
+        if (in_array($user->role, ['Back Office'], true)) {
             Auth::logout();
             return ApiHelper::problemResponse('Admin users cannot access the webapp.', 403);
         }
@@ -45,7 +45,7 @@ class AuthenticatedSessionController extends Controller
         // ❗ BLOCK UNVERIFIED USERS
         if (! $user->email_verified_at) {
             Auth::logout();
-            $otp = rand(100000, 999999);
+            $otp                  = rand(100000, 999999);
             $user->otp            = $otp;
             $user->otp_expires_at = now()->addMinutes(10);
             $user->save();
